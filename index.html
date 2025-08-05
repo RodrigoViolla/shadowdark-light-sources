@@ -23,12 +23,57 @@
                 </select>
             </div>
             <button onclick="addLight()">Add new light</button>
+            <div style="border-top: solid 2px; margin-top: 40px;"></div>
+            <button style="margin-top: 40px" onclick="downloadJsonFile()">Save to JSON</button>
+            <div style="margin-top: 10px" onchange="loadFromJson(event)">
+                <div>Load from JSON:</div>
+                <input type="file" id="load-json"></div>
+            </div>
         </div>
     </body>
 </html>
 <script>
     var lightSourcesDiv = document.getElementById('light-sources');
     var lightSources = [];
+
+    setInterval(() => {
+        for (let index = 0; index < lightSources.length; index++) {
+            countTime(index);
+            var timerDiv = document.getElementById('timer-' + index);
+            timerDiv.innerHTML = formatTime(lightSources[index].hours, lightSources[index].minutes, lightSources[index].seconds);
+            if(lightSources[index].minutes <= 10) {
+                timerDiv.classList.add("red-timer");
+            }
+        }
+        return 1000;
+    }, "1000");
+
+    function loadFromJson(file) {
+        const reader = new FileReader();
+
+        reader.onload = (e) => {
+            const fileContent = e.target.result; // The content of the file
+            lightSources = JSON.parse(fileContent);
+            console.log(lightSources);
+            updateDivs()
+        };
+
+        reader.readAsText(document.getElementById("load-json").files[0]);
+    }
+
+    function downloadJsonFile() {
+        const jsonString = JSON.stringify(lightSources, null, 2);
+        const blob = new Blob([jsonString], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+
+        a.href = url;
+        a.download = "shadowdark-light-sources.json";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a); 
+        URL.revokeObjectURL(url);
+    }
 
     function addLight() {
         lightSources.push({
@@ -47,18 +92,6 @@
         lightSources.splice(index, 1);
         updateDivs()
     } 
-
-    setInterval(() => {
-        for (let index = 0; index < lightSources.length; index++) {
-            countTime(index);
-            var timerDiv = document.getElementById('timer-' + index);
-            timerDiv.innerHTML = formatTime(lightSources[index].hours, lightSources[index].minutes, lightSources[index].seconds);
-            if(lightSources[index].minutes <= 10) {
-                timerDiv.classList.add("red-timer");
-            }
-        }
-        return 1000;
-    }, "1000");
 
     function countTime(index) {
         if(lightSources[index].pause) {
@@ -83,8 +116,7 @@
                 updateDivs()
                 return;
             }
-            
-            lightSources[index].minutes = 59;
+        
             lightSources[index].seconds = 59;
         }
     }
