@@ -1,0 +1,234 @@
+<html>
+    <header>
+        <title>Light Sources</title>
+    </header>
+    <body>
+        <div id="light-sources">
+        </div>
+        <div class="new-light">
+            <div>
+                <div>Title: </div>
+                <input type="text" id="title" placeholder="Title">
+            </div>
+            <div>
+                <div>Keeper: </div>
+                <input type="text" id="keeper" placeholder="Keeper">
+            </div>
+            <div>
+                <div>Icon: </div>
+                <select name="image" id="image">
+                    <option value="torch">Torch</option>
+                    <option value="lantern">Lantern</option>
+                    <option value="magic">Magic</option>
+                </select>
+            </div>
+            <button onclick="addLight()">Add new light</button>
+        </div>
+    </body>
+</html>
+<script>
+    var lightSourcesDiv = document.getElementById('light-sources');
+    var lightSources = [];
+
+    function addLight() {
+        lightSources.push({
+            title: document.getElementById('title').value,
+            image: document.getElementById('image').value,
+            keeper: document.getElementById('keeper').value,
+            hours: 0,
+            minutes: 59,
+            seconds: 59,
+            pause: false
+        });
+        updateDivs()
+    }
+
+    function removeLight(index) {
+        lightSources.splice(index, 1);
+        updateDivs()
+    } 
+
+    setInterval(() => {
+        for (let index = 0; index < lightSources.length; index++) {
+            countTime(index);
+            var timerDiv = document.getElementById('timer-' + index);
+            timerDiv.innerHTML = formatTime(lightSources[index].hours, lightSources[index].minutes, lightSources[index].seconds);
+            if(lightSources[index].minutes <= 10) {
+                timerDiv.classList.add("red-timer");
+            }
+        }
+        return 1000;
+    }, "1000");
+
+    function countTime(index) {
+        if(lightSources[index].pause) {
+            return;
+        }
+
+        if(lightSources[index].seconds + lightSources[index].minutes + lightSources[index].hours == 0) {
+            lightSources[index].seconds = 59;
+            lightSources[index].minutes = 59;
+            lightSources[index].hours = 0;
+            
+        }
+
+        lightSources[index].seconds--;
+
+        if(lightSources[index].seconds <= 0) {
+            lightSources[index].minutes--;
+            
+            if(lightSources[index].minutes <= 0 && lightSources[index].seconds <= 0){
+                lightSources[index].minutes = 0;
+                lightSources[index].pause = true;
+                updateDivs()
+                return;
+            }
+            
+            lightSources[index].minutes = 59;
+            lightSources[index].seconds = 59;
+        }
+    }
+
+    function formatTime(hours, minutes, seconds) {
+        if(hours <= 9) {
+            if(hours < 0) {
+                if(hours >= -9) {
+                    hours = "-0" + (hours * -1);
+                }
+            } else {
+                hours = "0" + hours;
+            }
+        }
+
+        if(minutes <= 9) {
+            minutes = "0" + minutes;
+        }
+
+        if(seconds <= 9) {
+            seconds = "0" + seconds;
+        }
+
+        return hours + ":" + minutes + ":" + seconds;
+    }
+
+    function updateDivs() {
+        var innerHtml = "";
+
+        for (let index = 0; index < lightSources.length; index++) {
+            innerHtml += 
+                "<div class='light-source'>"
+                    + "<div>"
+                        + "<button id='delete-" + index + "' onclick='removeLight(" + index + ")'>Delete</button>"
+                    + "</div>"
+                    + "<div class='light-source-title'>"
+                        + lightSources[index].title
+                    + "</div>"
+                    + "<div class='light-source-image'>"
+                        + "<img height='200px' src='images/" + lightSources[index].image + ".png'>"
+                    + "</div>"
+                    + "<div>"
+                        + "<div> Keeper: " + lightSources[index].keeper + "</div>"
+                        + "<div>"
+                            + "<input id='keeper-" + index + "' placeholder='New keeper' style='margin-right: 10px'>"
+                            + "<button id='pause-" + index + "' onclick='updateKeeper(" + index + ")'>Update</button>"
+                        + "</div>"
+                    + "</div>"
+                    + "<div class='light-source-timer'>"
+                        + "<div id='timer-" + index + "'>"
+                            + formatTime(lightSources[index].hours, lightSources[index].minutes, lightSources[index].seconds)
+                        + "</div>"
+                        + "<div>"
+                            + "<button id='pause-" + index + "' onclick='pauseResume(" + index + ")'>" + (lightSources[index].pause ? "Resume" : "Pause") + "</button>"
+                        + "</div>"
+                    + "</div>"
+                + "</div>";
+
+            innerHtml += "<br>";
+        }
+        lightSourcesDiv.innerHTML = innerHtml;
+    }
+
+    function pauseResume(index) {
+        lightSources[index].pause = !lightSources[index].pause; 
+        updateDivs();
+    }
+
+    function updateKeeper(index) {
+        var keeperInput = document.getElementById('keeper-' + index);
+
+        lightSources[index].keeper = keeperInput.value; 
+        keeperInput.value = "";
+
+        updateDivs();
+    }
+</script>
+<style>
+    #light-sources {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+    .light-source {
+        margin: 10px;
+        border: 3px black solid;
+        padding: 10px;
+        background: white;
+    }
+    .light-source-title {
+        text-align: center;
+    }
+    .light-source-image {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+    .light-source-timer {
+        width: 100%;
+        display: flex;
+        margin-top: 20px;
+        flex-direction: column;
+        align-content: center;
+        align-items: center;
+    }
+    .new-light {
+        border: 3px solid;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        background: white;
+        width: 300px;
+        margin-right: auto;
+        margin-left: auto;
+    }
+    .new-light input {
+        margin-bottom: 10px;
+    }
+
+    .new-light select {
+        margin-bottom: 10px;
+    }
+    .red-timer {
+        color: red;
+    }
+    button {
+        background: white;
+        font-weight: bolder;
+    }
+    input {
+        border-top: none;
+        border-left: none;
+        border-right: none;
+        border-bottom: solid;
+        font-weight: bolder;
+    }
+    select {
+        border: solid;
+        font-weight: bolder;
+    }
+    div {
+        font-weight: bolder;
+    }
+    body {
+        background: #e1e1e1;
+    }
+</style>
