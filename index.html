@@ -1,6 +1,6 @@
 <html>
     <header>
-        <title id="title">Light Sources</title>
+        <title id="page-title">Light Sources</title>
     </header>
     <body>
         <div id="light-sources">
@@ -46,9 +46,8 @@
             if(lightSources[index].seconds <= 600) {
                 timerDiv.classList.add("red-timer");
             }
-
-            document.getElementById('title').innerHTML = formatTime(lightSources[0].seconds) + " - Shadowdark Light Sources";
         }
+        document.getElementById('page-title').innerHTML = formatTime(lightSources[0].seconds) + " - Shadowdark Light Sources";
     }, 1000);
 
     function loadFromJson(file) {
