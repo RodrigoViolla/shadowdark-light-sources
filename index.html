@@ -1,6 +1,6 @@
 <html>
     <header>
-        <title>Light Sources</title>
+        <title id="title">Light Sources</title>
     </header>
     <body>
         <div id="light-sources">
@@ -32,6 +32,7 @@
         </div>
     </body>
 </html>
+<script src="lib/HackTimer.min.js"></script>
 <script>
     var lightSourcesDiv = document.getElementById('light-sources');
     var lightSources = [];
@@ -40,13 +41,15 @@
         for (let index = 0; index < lightSources.length; index++) {
             countTime(index);
             var timerDiv = document.getElementById('timer-' + index);
-            timerDiv.innerHTML = formatTime(lightSources[index].hours, lightSources[index].minutes, lightSources[index].seconds);
-            if(lightSources[index].minutes <= 10) {
+            timerDiv.innerHTML = formatTime(lightSources[index].seconds);
+            
+            if(lightSources[index].seconds <= 600) {
                 timerDiv.classList.add("red-timer");
             }
+
+            document.getElementById('title').innerHTML = formatTime(lightSources[0].seconds) + " - Shadowdark Light Sources";
         }
-        return 1000;
-    }, "1000");
+    }, 1000);
 
     function loadFromJson(file) {
         const reader = new FileReader();
@@ -54,7 +57,6 @@
         reader.onload = (e) => {
             const fileContent = e.target.result; // The content of the file
             lightSources = JSON.parse(fileContent);
-            console.log(lightSources);
             updateDivs()
         };
 
@@ -80,9 +82,7 @@
             title: document.getElementById('title').value,
             image: document.getElementById('image').value,
             keeper: document.getElementById('keeper').value,
-            hours: 0,
-            minutes: 59,
-            seconds: 59,
+            seconds: 3600,
             pause: false
         });
         updateDivs()
@@ -98,30 +98,22 @@
             return;
         }
 
-        if(lightSources[index].seconds + lightSources[index].minutes + lightSources[index].hours == 0) {
-            lightSources[index].seconds = 59;
-            lightSources[index].minutes = 59;
-            lightSources[index].hours = 0;
-            
-        }
-
         lightSources[index].seconds--;
 
         if(lightSources[index].seconds <= 0) {
-            lightSources[index].minutes--;
-            
-            if(lightSources[index].minutes <= 0 && lightSources[index].seconds <= 0){
-                lightSources[index].minutes = 0;
-                lightSources[index].pause = true;
-                updateDivs()
-                return;
-            }
-        
-            lightSources[index].seconds = 59;
+            lightSources[index].pause = true;
+            updateDivs()
+            return;
         }
     }
 
-    function formatTime(hours, minutes, seconds) {
+    function formatTime(total_seconds) {
+        var seconds = total_seconds;
+        var hours = Math.floor(seconds / (60*60));
+        seconds -= hours   * (60*60);
+        var minutes  = Math.floor(seconds / (60));
+        seconds -= minutes * (60);
+
         if(hours <= 9) {
             if(hours < 0) {
                 if(hours >= -9) {
@@ -162,15 +154,15 @@
                         + "<div> Keeper: " + lightSources[index].keeper + "</div>"
                         + "<div>"
                             + "<input id='keeper-" + index + "' placeholder='New keeper' style='margin-right: 10px'>"
-                            + "<button id='pause-" + index + "' onclick='updateKeeper(" + index + ")'>Update</button>"
+                            + "<button id='update-" + index + "' onclick='updateKeeper(" + index + ")'>Update</button>"
                         + "</div>"
                     + "</div>"
                     + "<div class='light-source-timer'>"
-                        + "<div id='timer-" + index + "'>"
-                            + formatTime(lightSources[index].hours, lightSources[index].minutes, lightSources[index].seconds)
+                        + "<div class='timer' id='timer-" + index + "'>"
+                            + formatTime(lightSources[index].seconds)
                         + "</div>"
                         + "<div>"
-                            + "<button id='pause-" + index + "' onclick='pauseResume(" + index + ")'>" + (lightSources[index].pause ? "Resume" : "Pause") + "</button>"
+                            + "<button id='pause-" + index + "' onclick='pauseResume(" + index + ")'>" + pauseButtonText(index) + "</button>"
                         + "</div>"
                     + "</div>"
                 + "</div>";
@@ -180,8 +172,25 @@
         lightSourcesDiv.innerHTML = innerHtml;
     }
 
+    function pauseButtonText(index) {
+        if(lightSources[index].seconds == 0) {
+            return "Reset";
+        }
+
+        if(lightSources[index].pause) {
+            return "Resume";
+        }
+
+        return "Pause";
+    }
+
     function pauseResume(index) {
-        lightSources[index].pause = !lightSources[index].pause; 
+        lightSources[index].pause = !lightSources[index].pause;
+        
+        if(lightSources[index].seconds <= 0) {
+            lightSources[index].seconds = 3600;
+        }
+
         updateDivs();
     }
 
@@ -241,6 +250,9 @@
     }
     .red-timer {
         color: red;
+    }
+    .timer {
+        font-size: 30px;
     }
     button {
         background: white;
